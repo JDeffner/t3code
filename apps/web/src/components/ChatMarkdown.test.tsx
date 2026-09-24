@@ -5,6 +5,7 @@ import { create, type ReactTestRenderer } from "react-test-renderer";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { getSyntaxHighlighterPromise } from "../lib/syntaxHighlighting";
+import * as mermaidRendering from "../lib/mermaidRendering";
 import { GitHubIcon } from "./Icons";
 import { Button } from "./ui/button";
 import { setMarkdownTaskChecked } from "./files/filePreviewMode";
@@ -72,6 +73,55 @@ function codeButton(renderer: ReactTestRenderer, label: string) {
   if (!button) throw new Error(`Missing code button: ${label}`);
   return button.props as ComponentProps<typeof Button>;
 }
+
+describe("ChatMarkdown diagrams", () => {
+  it.each(["mermaid", "mmd"])(
+    "waits for streaming to finish before rendering a %s fence",
+    async (language) => {
+      vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+      let intersect: (() => void) | undefined;
+      vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+          constructor(callback: (entries: Array<{ isIntersecting: boolean }>) => void) {
+            intersect = () => callback([{ isIntersecting: true }]);
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+      const draw = vi
+        .spyOn(mermaidRendering, "renderMermaidDiagram")
+        .mockResolvedValue("<svg>ready</svg>");
+      const text = `\`\`\`${language}\nflowchart LR\nStreamingA-->StreamingB\n\`\`\``;
+      let renderer: ReactTestRenderer | undefined;
+      try {
+        await act(async () => {
+          renderer = create(<ChatMarkdown cwd={undefined} text={text} isStreaming />, {
+            createNodeMock: () => ({
+              shadowRoot: { innerHTML: "", querySelector: () => null, replaceChildren() {} },
+            }),
+          });
+        });
+        expect(draw).not.toHaveBeenCalled();
+        expect(intersect).toBeUndefined();
+        await act(async () => renderer!.update(<ChatMarkdown cwd={undefined} text={text} />));
+        expect(draw).not.toHaveBeenCalled();
+        await act(async () => intersect!());
+        expect(draw).toHaveBeenCalledWith(
+          "flowchart LR\nStreamingA-->StreamingB\n",
+          "dark",
+          expect.any(AbortSignal),
+        );
+        expect(codeButton(renderer!, "Show diagram source")).toBeDefined();
+      } finally {
+        await act(async () => renderer?.unmount());
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+      }
+    },
+  );
+});
 
 describe("ChatMarkdown context references", () => {
   it("renders text and image references through the chip renderer, with readable fallback", async () => {

@@ -153,6 +153,34 @@
   ],
   "packageOverrides": [
     {
+      "name": "fastdom",
+      "version": "1.0.12",
+      "sourceUrl": "https://github.com/wilsonpage/fastdom#license",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2016 Wilson Page <wilsonpage@me.com>"]
+      }
+    },
+    {
+      "name": "strictdom",
+      "version": "1.0.1",
+      "sourceUrl": "https://github.com/wilsonpage/strictdom#license",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2013 Wilson Page <wilsonpage@me.com>"]
+      }
+    },
+    {
+      "name": "khroma",
+      "version": "2.1.0",
+      "license": "MIT",
+      "sourceUrl": "https://github.com/fabiospampinato/khroma/blob/v2.1.0/license",
+      "generatedNotice": {
+        "licenseId": "MIT",
+        "copyrights": ["Copyright (c) 2019-present Fabio Spampinato, Andrew Maney"]
+      }
+    },
+    {
       "license": "MIT",
       "name": "@react-grab/cli",
       "sourceUrl": "https://github.com/aidenybai/react-grab/tree/main/packages/cli",

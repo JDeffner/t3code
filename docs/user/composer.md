@@ -12,6 +12,14 @@ becomes an attachment when inserting it would exceed the message limit. On a
 hardware keyboard, use `Cmd+Shift+V` on Apple devices or `Ctrl+Shift+V` elsewhere
 to keep a large paste editable in the composer instead.
 
+## Diagrams
+
+On web and desktop, put Mermaid source inside a `mermaid` or `mmd` code fence to display a diagram. Agent replies display diagrams after streaming finishes. Mobile shows the source.
+
+Use the source view to inspect the diagram text. Your view choice for the same source is remembered during the session. Large diagrams can be viewed at their actual size and scrolled. Copying a diagram selection preserves its Markdown code fence; the code block's copy button copies the source without the fence.
+
+Previews are limited to 20,000 characters and 200 edges. If rendering fails, the source remains available with error details and a retry action.
+
 ## Attach files
 
 Attach up to 100 files per message. Each image can be up to 10 MiB, with at most

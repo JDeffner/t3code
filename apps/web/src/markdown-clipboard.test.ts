@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
-import { serializeRenderedMarkdownFragment } from "./markdown-clipboard";
+import {
+  chatMarkdownClipboardPayload,
+  serializeMarkdownCodeFence,
+  serializeRenderedMarkdownFragment,
+} from "./markdown-clipboard";
 import { EnvironmentId, MessageId, ThreadId } from "@t3tools/contracts";
 import {
   collectAssistantCitations,
@@ -109,6 +113,37 @@ function renderedCodeBlock(lines: ReadonlyArray<string>): FakeElement {
 }
 
 describe("serializeRenderedMarkdownFragment", () => {
+  it("preserves a diagram's fenced source when copying surrounding prose", () => {
+    const source = "flowchart LR\nA-->B\n%% ``` in a comment";
+    const fence = serializeMarkdownCodeFence(source, "mmd");
+    const fragment = new FakeElement("DIV").append(
+      new FakeElement("P").append(new FakeText("Before")),
+      new FakeElement("DIV", [], { "data-markdown-copy": fence }),
+      new FakeElement("P").append(new FakeText("After")),
+    );
+    expect(serializeRenderedMarkdownFragment(asNode(fragment))).toBe(
+      `Before\n\n\`\`\`\`mmd\n${source}\n\`\`\`\`\n\nAfter`,
+    );
+  });
+
+  it("preserves the fence when only a diagram's child is selected", () => {
+    const fence = "```mermaid\nflowchart LR\nA-->B\n```\n\n";
+    const container = { appendChild() {}, querySelectorAll: () => [], innerHTML: "A" };
+    vi.stubGlobal("document", { createElement: () => container });
+    const payload = chatMarkdownClipboardPayload({
+      rangeCount: 1,
+      getRangeAt: () => ({
+        collapsed: false,
+        cloneContents: () => ({}),
+        commonAncestorContainer: {
+          nodeType: ELEMENT_NODE,
+          closest: () => ({ getAttribute: () => fence }),
+        },
+      }),
+    } as unknown as Selection);
+    expect(payload?.text).toBe(fence);
+  });
+
   it("copies a popover context reference once, without its details or nested label", () => {
     const reference = "[Review comment](t3-context://v1/review-comment/review-1)";
     const container = new FakeElement("DIV").append(
