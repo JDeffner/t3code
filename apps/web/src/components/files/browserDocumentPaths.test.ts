@@ -25,6 +25,17 @@ describe("browser document file paths", () => {
     expect(isBrowserPreviewFile(link!.filePath)).toBe(true);
   });
 
+  it.each(["html", "pdf"])("opens a bare Unicode .%s link as a browser document", (extension) => {
+    const path = `線性代數/期中 報告.${extension}`;
+    const link = resolveMarkdownFileLinkMeta(encodeURI(path), "/workspace");
+    expect(link).toMatchObject({
+      filePath: `/workspace/${path}`,
+      workspaceRelativePath: path,
+    });
+    expect(isBrowserPreviewFile(link!.filePath)).toBe(true);
+    expect(isPdfPreviewFile(link!.filePath)).toBe(extension === "pdf");
+  });
+
   it.each([
     "reports/report.html",
     "reports/report#final.html",

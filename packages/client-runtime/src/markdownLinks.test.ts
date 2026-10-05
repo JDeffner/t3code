@@ -146,6 +146,32 @@ describe("parseMarkdownFileLink", () => {
     expect(parseMarkdownFileLink(href)).toEqual(expected);
   });
 
+  it.each([
+    "線性代數.pdf",
+    "Summer 2026/pastexam/線性代數/2025_midterm_exam1_易志偉_1222.pdf",
+    "résumé.html",
+    "re\u0301sume\u0301.html",
+    "नमस्ते/रिपोर्ट.html",
+    "تقرير/٢٠٢٦.html",
+    "𠮷野/報告.html",
+  ])("recognizes literal and encoded Unicode paths without normalizing %s", (path) => {
+    expect(parseMarkdownFileLink(path)).toEqual({ path });
+    expect(parseMarkdownFileLink(encodeURI(path))).toEqual({ path });
+  });
+
+  it("preserves Unicode filenames with spaces, literal delimiters, and line targets", () => {
+    expect(parseMarkdownFileLink("<線性代數/期中 報告%23final.html?download=1#L12C3>")).toEqual({
+      path: "線性代數/期中 報告#final.html",
+      line: 12,
+      column: 3,
+    });
+    expect(parseMarkdownFileLink("線性代數.pdf:12:3")).toEqual({
+      path: "線性代數.pdf",
+      line: 12,
+      column: 3,
+    });
+  });
+
   it("separates URL query and fragment delimiters before decoding the filename", () => {
     expect(parseMarkdownFileLink("report%23final.html?download=1#L12C3")).toEqual({
       path: "report#final.html",
@@ -177,6 +203,13 @@ describe("parseMarkdownFileLink", () => {
     "readme%23final",
     "readme%3Ffinal",
     "read%20the%23report",
+    "https://example.com/線性代數.pdf",
+    "//example.com/線性代數.pdf",
+    "mailto:用戶@example.com",
+    "/chat/設定#L3",
+    "線性代數",
+    "期中 報告",
+    "報告%0A.pdf",
   ])("does not treat %s as a file", (href) => {
     expect(parseMarkdownFileLink(href)).toBeNull();
   });
