@@ -16,6 +16,15 @@ describe("browser document file paths", () => {
     expect(isBrowserPreviewFile(link!.filePath)).toBe(true);
   });
 
+  it("opens an encoded relative HTML link from rendered markdown", () => {
+    const link = resolveMarkdownFileLinkMeta("report%23final.html", "/workspace");
+    expect(link).toMatchObject({
+      filePath: "/workspace/report#final.html",
+      workspaceRelativePath: "report#final.html",
+    });
+    expect(isBrowserPreviewFile(link!.filePath)).toBe(true);
+  });
+
   it.each([
     "reports/report.html",
     "reports/report#final.html",

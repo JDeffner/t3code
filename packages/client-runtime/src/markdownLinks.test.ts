@@ -130,6 +130,35 @@ describe("parseMarkdownFileLink", () => {
   });
 
   it.each([
+    ["report%23final.html", { path: "report#final.html" }],
+    ["report%3Ffinal.html", { path: "report?final.html" }],
+    ["report%25final.html", { path: "report%final.html" }],
+    ["report%2523final.html", { path: "report%23final.html" }],
+    [
+      "reports/report%23final.html#L12C3",
+      { path: "reports/report#final.html", line: 12, column: 3 },
+    ],
+    ["reports/report%3Ffinal.html:12", { path: "reports/report?final.html", line: 12 }],
+    ["reports%23final/report.html#L12", { path: "reports#final/report.html", line: 12 }],
+    ["reports%3Ffinal/report.html", { path: "reports?final/report.html" }],
+    ["reports%25final/report.html", { path: "reports%final/report.html" }],
+  ])("preserves encoded filename characters in %s", (href, expected) => {
+    expect(parseMarkdownFileLink(href)).toEqual(expected);
+  });
+
+  it("separates URL query and fragment delimiters before decoding the filename", () => {
+    expect(parseMarkdownFileLink("report%23final.html?download=1#L12C3")).toEqual({
+      path: "report#final.html",
+      line: 12,
+      column: 3,
+    });
+    expect(parseMarkdownFileLink("report.html?final.html#section")).toEqual({
+      path: "report.html",
+    });
+    expect(parseMarkdownFileLink("report.html#final.html")).toEqual({ path: "report.html" });
+  });
+
+  it.each([
     "",
     "#anchor",
     "//cdn.example.com/clip.mp4",
@@ -141,6 +170,13 @@ describe("parseMarkdownFileLink", () => {
     "/app#L1",
     "readme",
     "TODO:12",
+    "https://example.com/report%23final.html",
+    "//cdn.example.com/report%3Ffinal.html",
+    "/chat/settings%23final#L3",
+    "/chat/settings%3Ffinal?view=report.html",
+    "readme%23final",
+    "readme%3Ffinal",
+    "read%20the%23report",
   ])("does not treat %s as a file", (href) => {
     expect(parseMarkdownFileLink(href)).toBeNull();
   });
