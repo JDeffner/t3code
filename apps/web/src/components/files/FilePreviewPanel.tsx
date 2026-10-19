@@ -254,12 +254,7 @@ function WorkspaceBrowserPreview(props: {
   return (
     <BrowserDocumentFrame
       src={`${assetUrl.url}${revisionSuffix}`}
-      documentKey={JSON.stringify([
-        props.environmentId,
-        props.threadRef.threadId,
-        props.absolutePath,
-        props.workspaceMutationId,
-      ])}
+      documentKey={`${props.environmentId}:${props.threadRef.threadId}:${props.absolutePath}:${props.workspaceMutationId}`}
       title={props.title}
       pdf={isPdfPreviewFile(props.absolutePath)}
     />

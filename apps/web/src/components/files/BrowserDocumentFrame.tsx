@@ -74,28 +74,45 @@ export function BrowserDocumentFrame(props: {
   readonly pdf: boolean;
   readonly htmlRender?: boolean;
   readonly threadRef?: ScopedThreadRef | undefined;
+  /**
+   * Names the document the src serves. While it stays the same, a renewed src
+   * (a re-minted signed asset URL) leaves the loaded page alone; without one,
+   * every new src loads a new document.
+   */
+  readonly documentKey?: string | undefined;
 }) {
-  const className = "min-h-0 flex-1 border-0 bg-white";
-  return props.pdf ? (
-    // oxlint-disable-next-line react/iframe-missing-sandbox -- the built-in PDF viewer needs an unsandboxed frame.
-    <iframe
-      key={props.src}
-      src={`${props.src}${PDF_VIEWER_FRAGMENT}`}
-      title={props.title}
-      className={className}
-    />
-  ) : props.htmlRender ? (
+  const key = props.documentKey ?? props.src;
+  return !props.pdf && props.htmlRender ? (
     <HtmlRenderDocument
-      key={props.src}
+      key={key}
       src={props.src}
       title={props.title}
       threadRef={props.threadRef}
       className="min-h-0 flex-1"
     />
   ) : (
+    <FileDocument key={key} src={props.src} title={props.title} pdf={props.pdf} />
+  );
+}
+
+/**
+ * The first URL is kept for the frame's lifetime: signed asset URLs re-mint
+ * while it stays mounted, and a new src would reload the page and drop the
+ * reader's form input or scroll position.
+ */
+function FileDocument(props: {
+  readonly src: string;
+  readonly title: string;
+  readonly pdf: boolean;
+}) {
+  const [src] = useState(props.src);
+  const className = "min-h-0 flex-1 border-0 bg-white";
+  return props.pdf ? (
+    // oxlint-disable-next-line react/iframe-missing-sandbox -- the built-in PDF viewer needs an unsandboxed frame.
+    <iframe src={`${src}${PDF_VIEWER_FRAGMENT}`} title={props.title} className={className} />
+  ) : (
     <iframe
-      key={props.src}
-      src={props.src}
+      src={src}
       title={props.title}
       className={className}
       sandbox="allow-scripts allow-forms allow-popups allow-downloads"
