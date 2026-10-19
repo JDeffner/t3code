@@ -1,6 +1,6 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, it, vi } from "vite-plus/test";
+import { expect, it, onTestFinished, vi } from "vite-plus/test";
 
 import { BrowserDocumentFrame } from "./BrowserDocumentFrame";
 
@@ -9,7 +9,12 @@ it("keeps the loaded HTML page while its signed URL renews, and reloads on a new
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  const render = (src: string, documentKey: string) =>
+  onTestFinished(async () => {
+    await act(async () => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
+  });
+  const render = (src: string, documentKey?: string) =>
     act(async () =>
       root.render(
         <BrowserDocumentFrame src={src} title="Review" pdf={false} documentKey={documentKey} />,
@@ -26,7 +31,9 @@ it("keeps the loaded HTML page while its signed URL renews, and reloads on a new
   expect(container.querySelector("iframe")).not.toBe(frame);
   expect(container.querySelector("iframe")?.getAttribute("src")).toBe("about:blank#token-c");
 
-  await act(async () => root.unmount());
-  container.remove();
-  vi.unstubAllGlobals();
+  await render("about:blank#first");
+  const urlDrivenFrame = container.querySelector("iframe");
+  await render("about:blank#second");
+  expect(container.querySelector("iframe")).not.toBe(urlDrivenFrame);
+  expect(container.querySelector("iframe")?.getAttribute("src")).toBe("about:blank#second");
 });

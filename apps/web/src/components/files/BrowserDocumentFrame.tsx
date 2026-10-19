@@ -74,11 +74,7 @@ export function BrowserDocumentFrame(props: {
   readonly pdf: boolean;
   readonly htmlRender?: boolean;
   readonly threadRef?: ScopedThreadRef | undefined;
-  /**
-   * Names the document the src serves. While it stays the same, a renewed src
-   * (a re-minted signed asset URL) leaves the loaded page alone; without one,
-   * every new src loads a new document.
-   */
+  /** Stable resource identity and revision; defaults to src for callers that reload on URL changes. */
   readonly documentKey?: string | undefined;
 }) {
   const key = props.documentKey ?? props.src;
@@ -95,11 +91,7 @@ export function BrowserDocumentFrame(props: {
   );
 }
 
-/**
- * The first URL is kept for the frame's lifetime: signed asset URLs re-mint
- * while it stays mounted, and a new src would reload the page and drop the
- * reader's form input or scroll position.
- */
+// URL renewals must not discard form input or scroll; a new key mounts a fresh document.
 function FileDocument(props: {
   readonly src: string;
   readonly title: string;
